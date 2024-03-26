@@ -10,6 +10,12 @@ def custom_class():
         Name: str = 'orange'
         Value: float = 50
 
+        def __eq__(self, other) -> bool:
+            return (self.pk == other.pk
+                    and self.ID == other.ID
+                    and self.Name == other.Name
+                    and self.Value == other.Value)
+
     return Custom
 
 @pytest.fixture

@@ -20,7 +20,7 @@ class SQLiteRepository(AbstractRepository[T]):
         self.table_name = cls.__name__.lower()
         self.fields = get_annotations(cls, eval_str=True)
         self.fields.pop('pk')
-        self.cls_type = cls
+        self.cls_type: T = cls
 
     def add(self, obj: T) -> int:
         names = ', '.join(self.fields.keys())
