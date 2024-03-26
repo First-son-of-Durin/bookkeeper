@@ -5,9 +5,22 @@ import pytest
 @pytest.fixture
 def custom_class():
     class Custom():
-        pk = 0
+        pk: int = 0
+        ID: int = 2
+        Name: str = 'orange'
+        Value: float = 50
 
     return Custom
+
+@pytest.fixture
+def custom_obj():
+    class Obj():
+        pk: int = 0
+        ID: int = 2
+        Name: str = 'orange'
+        Value: float = 50
+
+    return Obj
 
 @pytest.fixture
 def custom_db_file():
@@ -15,13 +28,26 @@ def custom_db_file():
 
     return db_file
 
-@pytest.fixture
-def custom_class():
-    class Custom():
-        pk = 0
-
-    return Custom
 
 @pytest.fixture
-def repo():
-    return SQLiteRepository()
+def repo(custom_db_file, custom_class):
+    return SQLiteRepository(custom_db_file, custom_class)
+
+
+def test_crud(repo, custom_class,custom_obj):
+    obj = custom_class()
+    pk = repo.add(obj)
+#    print(pk)
+    obj2 = custom_class()
+    pk2 = repo.add(obj2)
+#    print(pk2)
+    assert obj.pk == pk
+#    print(repo.get(pk))
+#    print(obj)
+    assert repo.get(pk) == obj
+    obj2 = custom_class()
+    obj2.pk = pk
+    repo.update(obj2)
+    assert repo.get(pk) == obj2
+    repo.delete(pk)
+    assert repo.get(pk) is None

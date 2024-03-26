@@ -4,6 +4,7 @@
 # from itertools import count
 # from typing import Any
 from inspect import get_annotations
+from typing import Any
 import sqlite3
 
 from bookkeeper.bookkeeper.repository.abstract_repository import AbstractRepository, T
@@ -19,6 +20,7 @@ class SQLiteRepository(AbstractRepository[T]):
         self.table_name = cls.__name__.lower()
         self.fields = get_annotations(cls, eval_str=True)
         self.fields.pop('pk')
+        self.cls_type = cls
 
     def add(self, obj: T) -> int:
         names = ', '.join(self.fields.keys())
@@ -40,15 +42,29 @@ class SQLiteRepository(AbstractRepository[T]):
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
             cur.execute('PRAGMA foreign_keys = ON')
-            cur.execute(f'SELECT * FROM {self.table_name} WHERE pk = ?', (pk,))
+            cur.execute(f'SELECT * FROM {self.table_name} '
+                        f'WHERE rowid = ?', (pk,))
             result = cur.fetchone()
         con.commit()
         con.close()
-        '''???? очень непонятно что дальше сделать и как вывести переменную типа T ????'''
+
         if result:
-            return result
+            result_obj: any = self.cls_type()
+
+            setattr(result_obj, 'pk', pk)
+
+            keys = list(self.fields.keys())
+            for i in range(len(keys)):
+                setattr(result_obj, keys[i], result[i])
+
+            return result_obj
         else:
             return None
+    def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
+        if where is None:
+            return list(self._container.values())
+        return [obj for obj in self._container.values()
+                if all(getattr(obj, attr) == value for attr, value in where.items())]
 
     def delete(self, pk: int) -> None:
         with sqlite3.connect(self.db_file) as con:
@@ -70,23 +86,3 @@ class SQLiteRepository(AbstractRepository[T]):
             cur.execute(f'UPDATE {self.table_name} SET  WHERE pk = ?', (obj.pk,))
         con.commit()
         con.close()
-
-
-'''
-    def get(self, pk: int) -> T | None:
-        return self._container.get(pk)
-
-    def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
-        if where is None:
-            return list(self._container.values())
-        return [obj for obj in self._container.values()
-                if all(getattr(obj, attr) == value for attr, value in where.items())]
-
-    def update(self, obj: T) -> None:
-        if obj.pk == 0:
-            raise ValueError('attempt to update object with unknown primary key')
-        self._container[obj.pk] = obj
-
-    def delete(self, pk: int) -> None:
-        self._container.pop(pk)
-'''
