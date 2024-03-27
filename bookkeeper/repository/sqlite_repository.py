@@ -70,19 +70,24 @@ class SQLiteRepository(AbstractRepository[T]):
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
             cur.execute('PRAGMA foreign_keys = ON')
-            cur.execute(f'DELETE FROM {self.table_name} WHERE pk = ?', (pk,))
+            cur.execute(f'DELETE FROM {self.table_name} '
+                        f'WHERE rowid = ?', (pk,))
         con.commit()
         con.close()
 
     def update(self, obj: T) -> None:
         if obj.pk == 0:
             raise ValueError('attempt to update object with unknown primary key')
-        names = ', '.join(self.fields.keys())
-        p = ', '.join("?" * len(self.fields))
+        keys = list(self.fields.keys())
         values = [getattr(obj, x) for x in self.fields]
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
             cur.execute('PRAGMA foreign_keys = ON')
-            cur.execute(f'UPDATE {self.table_name} SET  WHERE pk = ?', (obj.pk,))
+            set_clause = ', '.join(f'{key} = ?' for key in keys)
+            print(set_clause)
+            set_values = tuple(values + [obj.pk])  # Добавляем pk в конец кортежа
+            print(set_values)
+            cur.execute(f'UPDATE {self.table_name} SET {set_clause} WHERE rowid = ?', set_values)
+
         con.commit()
         con.close()
