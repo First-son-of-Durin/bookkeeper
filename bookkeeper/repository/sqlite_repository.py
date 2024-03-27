@@ -23,6 +23,8 @@ class SQLiteRepository(AbstractRepository[T]):
         self.cls_type: T = cls
 
     def add(self, obj: T) -> int:
+        if getattr(obj, 'pk', None) != 0:
+            raise ValueError(f'trying to add object {obj} with filled `pk` attribute')
         names = ', '.join(self.fields.keys())
         p = ', '.join("?" * len(self.fields))
         values = [getattr(obj, x) for x in self.fields]
@@ -50,30 +52,41 @@ class SQLiteRepository(AbstractRepository[T]):
 
         if result:
             result_obj: any = self.cls_type()
-
             setattr(result_obj, 'pk', pk)
-
             keys = list(self.fields.keys())
             for i in range(len(keys)):
                 setattr(result_obj, keys[i], result[i])
-
             return result_obj
         else:
             return None
-    def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
-        if where is None:
-            return list(self._container.values())
-        return [obj for obj in self._container.values()
-                if all(getattr(obj, attr) == value for attr, value in where.items())]
 
-    def delete(self, pk: int) -> None:
-        with sqlite3.connect(self.db_file) as con:
-            cur = con.cursor()
-            cur.execute('PRAGMA foreign_keys = ON')
-            cur.execute(f'DELETE FROM {self.table_name} '
-                        f'WHERE rowid = ?', (pk,))
-        con.commit()
-        con.close()
+    def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
+        result = list()
+        if where is None:
+            with sqlite3.connect(self.db_file) as con:
+                cur = con.cursor()
+                cur.execute('PRAGMA foreign_keys = ON')
+                cur.execute(f'SELECT COUNT(*) FROM {self.table_name}')
+                size = cur.fetchone()[0]
+            con.commit()
+            con.close()
+            if size > 0:
+                for i in range(size):
+                    result.append(self.get(i+1))
+            return result
+
+        for attr, value in where.items():
+            with sqlite3.connect(self.db_file) as con:
+                cur = con.cursor()
+                cur.execute('PRAGMA foreign_keys = ON')
+                cur.execute(f'SELECT ROWID FROM {self.table_name} WHERE {attr} = ?', (value,))
+                rowids = cur.fetchall()
+                print(rowids)
+                for rowid in rowids:
+                    result.append(self.get(rowid[0]))
+            con.commit()
+            con.close()
+        return result
 
     def update(self, obj: T) -> None:
         if obj.pk == 0:
@@ -84,10 +97,25 @@ class SQLiteRepository(AbstractRepository[T]):
             cur = con.cursor()
             cur.execute('PRAGMA foreign_keys = ON')
             set_clause = ', '.join(f'{key} = ?' for key in keys)
-            print(set_clause)
+            #print(set_clause)
             set_values = tuple(values + [obj.pk])  # Добавляем pk в конец кортежа
-            print(set_values)
+            #print(set_values)
             cur.execute(f'UPDATE {self.table_name} SET {set_clause} WHERE rowid = ?', set_values)
+
+        con.commit()
+        con.close()
+
+    def delete(self, pk: int) -> None:
+        with sqlite3.connect(self.db_file) as con:
+            cur = con.cursor()
+            cur.execute('PRAGMA foreign_keys = ON')
+            cur.execute(f'SELECT COUNT(*) FROM {self.table_name} WHERE rowid = ?', (pk,))
+            result = cur.fetchone()[0]
+            if result > 0:
+                cur.execute(f'DELETE FROM {self.table_name} '
+                            f'WHERE rowid = ?', (pk,))
+            else:
+                raise KeyError(f'trying to delete object that does not exist')
 
         con.commit()
         con.close()
