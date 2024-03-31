@@ -5,10 +5,14 @@
 from bookkeeper.bookkeeper.models.category import Category
 from bookkeeper.bookkeeper.models.expense import Expense
 from bookkeeper.bookkeeper.repository.memory_repository import MemoryRepository
+from bookkeeper.bookkeeper.repository.sqlite_repository import SQLiteRepository
 from bookkeeper.bookkeeper.utils import read_tree
 
 cat_repo = MemoryRepository[Category]()
 exp_repo = MemoryRepository[Expense]()
+
+#cat_repo = SQLiteRepository('db_file.db',Category)
+#exp_repo = SQLiteRepository('db_file.db',Expense)
 
 cats = '''
 продукты
@@ -40,6 +44,6 @@ while True:
         except IndexError:
             print(f'категория {name} не найдена')
             continue
-        exp = Expense(int(amount), cat.pk)
+        exp = Expense(float(amount), cat.pk)
         exp_repo.add(exp)
         print(exp)

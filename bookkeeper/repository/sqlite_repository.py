@@ -22,6 +22,9 @@ class SQLiteRepository(AbstractRepository[T]):
         self.fields.pop('pk')
         self.cls_type: T = cls
 
+    #def __repr__(self):
+        #return f'{self.}'
+
     def add(self, obj: T) -> int:
         if getattr(obj, 'pk', None) != 0:
             raise ValueError(f'trying to add object {obj} with filled `pk` attribute')
@@ -51,7 +54,7 @@ class SQLiteRepository(AbstractRepository[T]):
         con.close()
 
         if result:
-            result_obj: any = self.cls_type()
+            result_obj: any = self.cls_type
             setattr(result_obj, 'pk', pk)
             keys = list(self.fields.keys())
             for i in range(len(keys)):
@@ -61,7 +64,7 @@ class SQLiteRepository(AbstractRepository[T]):
             return None
 
     def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
-        result = list()
+        result = list[self.cls_type]()
         if where is None:
             with sqlite3.connect(self.db_file) as con:
                 cur = con.cursor()
