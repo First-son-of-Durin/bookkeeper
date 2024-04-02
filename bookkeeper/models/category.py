@@ -19,6 +19,11 @@ class Category:
     parent: int | None = None
     pk: int = 0
 
+    def __init__(self, name: str = '', parent: int | None = None, pk: int = 0):
+        self.name = name
+        self.parent = parent
+        self.pk = pk
+
     def get_parent(self,
                    repo: AbstractRepository['Category']) -> 'Category | None':
         """
@@ -116,3 +121,9 @@ class Category:
             repo.add(cat)
             created[child] = cat
         return list(created.values())
+
+    def __repr__(self):
+        return f'Category(name={self.name}, parent={self.parent}, pk={self.pk})'
+
+    def __str__(self):
+        return f'Category(name={self.name}, parent={self.parent}, pk={self.pk})'

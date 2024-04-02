@@ -8,11 +8,11 @@ from bookkeeper.bookkeeper.repository.memory_repository import MemoryRepository
 from bookkeeper.bookkeeper.repository.sqlite_repository import SQLiteRepository
 from bookkeeper.bookkeeper.utils import read_tree
 
-cat_repo = MemoryRepository[Category]()
-exp_repo = MemoryRepository[Expense]()
+#cat_repo = MemoryRepository[Category]()
+#exp_repo = MemoryRepository[Expense]()
 
-#cat_repo = SQLiteRepository('db_file.db',Category)
-#exp_repo = SQLiteRepository('db_file.db',Expense)
+cat_repo = SQLiteRepository('db_file.db', Category)
+exp_repo = SQLiteRepository('db_file.db', Expense)
 
 cats = '''
 продукты

@@ -5,30 +5,23 @@ import pytest
 
 @pytest.fixture
 def custom_class():
-    class Custom():
+    class Expense():
+        amount: int = 0
+        category: int = 0
+        expense_date: str = ''
+        added_date: str = ''
+        comment: str = ''
         pk: int = 0
-        ID: int = 2
-        Name: str = 'orange'
-        Value: float = 50
 
         def __eq__(self, other) -> bool:
             return (self.pk == other.pk
-                    and self.ID == other.ID
-                    and self.Name == other.Name
-                    and self.Value == other.Value)
+                    and self.amount == other.amount
+                    and self.category == other.category
+                    and self.expense_date == other.expense_date
+                    and self.added_date == other.added_date
+                    and self.comment == other.comment)
 
-    return Custom
-
-
-@pytest.fixture
-def custom_obj():
-    class Obj():
-        pk: int = 0
-        ID: int = 2
-        Name: str = 'orange'
-        Value: float = 50
-
-    return Obj
+    return Expense
 
 
 @pytest.fixture
@@ -43,7 +36,8 @@ def repo(custom_db_file, custom_class):
     return SQLiteRepository(custom_db_file, custom_class)
 
 
-def test_crud(repo, custom_class, custom_obj):
+def test_crud(repo, custom_class):
+
     obj = custom_class()
     pk = repo.add(obj)
     assert obj.pk == pk
@@ -78,20 +72,25 @@ def test_get_all(repo, custom_class):
     for o in objects:
         repo.add(o)
     obj = repo.get_all()
-    print(objects)
-    print(obj)
     assert obj == objects
 
 def test_get_all_with_condition(repo, custom_class):
     objects = []
     for i in range(5):
         o = custom_class()
-        o.ID = i
-        o.Name = 'test'
+        o.amount = 0
+        o.category = i
+        o.expense_date = 'test'
+        o.added_date = ''
+        o.comment = ''
         repo.add(o)
         objects.append(o)
-    assert repo.get_all({'ID': '0'}) == [objects[0]]
-    #repo_get = repo.get_all({'Name': 'test'})
-    #print(repo_get)
-    #print(objects)
-    assert repo.get_all({'Name': 'test'}) == objects
+    res_get_all = repo.get_all({'category': '2'})
+    print(res_get_all)
+    print([objects[2]])
+    assert res_get_all == [objects[2]]
+
+    res_get_all = repo.get_all({'expense_date': 'test'})
+    print(res_get_all)
+    print([objects])
+    assert res_get_all == objects

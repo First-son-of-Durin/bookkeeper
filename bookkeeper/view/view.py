@@ -1,6 +1,27 @@
 import sys
 
 from PySide6 import QtWidgets, QtCore, QtGui
+from bookkeeper.bookkeeper.view.abstract_view import AbstractView
+from PySide6.QtWidgets import QApplication
+
+
+class App(QApplication):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.view = MainWindow()
+
+
+
+
+class View(AbstractView):
+
+    def __init__(self):
+        pass
+
+    def register_cat_adder(self, handler):
+        self.cat_adder = handler
+
 
 class MyWindow(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):

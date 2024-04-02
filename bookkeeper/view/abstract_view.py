@@ -12,13 +12,22 @@
 from abc import ABC, abstractmethod
 from typing import Protocol
 from collections.abc import Callable
+from bookkeeper.bookkeeper.models.expense import Expense
 from bookkeeper.bookkeeper.models.category import Category
+from bookkeeper.bookkeeper.models.budget import Budget
+
 
 class AbstractView(Protocol):
-    def set_category_list(cat: list[Category]) -> None:
+    def set_category_list(self, cat: list[Category]) -> None:
         pass
 
-    def register_cat_modifier(
+    def set_budget_list(self, cat: list[Budget]) -> None:
+        pass
+
+    def set_expense_list(self, cat: list[Expense]) -> None:
+        pass
+
+    def register_cat_modifier(self,
             handler: Callable[[Category],None]):
         pass
 
