@@ -1,67 +1,84 @@
 """
 Модуль содержит описание абстрактного представления
-
-ПОКА ЧТО ПРОСТО КОПИЯ abstract_repository.py
-
-Репозиторий реализует хранение объектов, присваивая каждому объекту уникальный
-идентификатор в атрибуте pk (primary key). Объекты, которые могут быть сохранены
-в репозитории, должны поддерживать добавление атрибута pk и не должны
-использовать его для иных целей.
 """
 
-from abc import ABC, abstractmethod
-from typing import Protocol
-from collections.abc import Callable
+from typing import Protocol, Callable
 from bookkeeper.bookkeeper.models.expense import Expense
 from bookkeeper.bookkeeper.models.category import Category
 from bookkeeper.bookkeeper.models.budget import Budget
 
 
 class AbstractView(Protocol):
-    def set_category_list(self, cat: list[Category]) -> None:
+    def set_category_list(self, handler: [Category]) -> None:
+        """
+        Метод воссоздает список категорий из базы данных и
+        и добавляет его в графический интерфейс (GUI)
+        # FIXME:
+        Возможно вместо handler: [Category]
+        должно быть cat: list[Category]
+        """
+        pass
+
+    def register_category_deleter(self, handler: Callable) -> None:
+        """
+        Метод регистрирует обработчик команды кнопки, удаляющей категорию
+        """
+        pass
+
+    def register_category_adder(self, handler: Callable) -> None:
+        """
+        Метод регистрирует обработчик команды кнопки, добавляющий категорию
+        """
+        pass
+
+    def register_category_modifier(self, handler: Callable):
+        """
+        Метод регистрирует обработчик команды кнопки, изменяющий категорию.
+        Менять можно родителя и название категории.
+        # FIXME:
+        Возможно вместо handler: Callable
+        должно быть handler: Callable[[Category], None]
+        """
+        pass
+
+    def set_expense_list(self, handler: [Expense]) -> None:
+        """
+        Метод воссоздает список расходов из базы данных и
+        и добавляет его в графический интерфейс (GUI).
+        # FIXME:
+        Возможно вместо handler: [Expense]
+        должно быть cat: list[Expense]
+        """
+        pass
+
+    def register_expense_deleter(self, handler: Callable) -> None:
+        """
+        Метод регистрирует обработчик команды кнопки, удаляющей расходную операцию.
+        """
+        pass
+
+    def register_expense_adder(self, handler: Callable) -> None:
+        """
+        Метод регистрирует обработчик команды кнопки, удаляющей расходную операцию.
+        """
+        pass
+
+    def register_expense_modifier(self, handler: Callable):
+        """
+        Метод регистрирует обработчик команды кнопки, изменяющий расходную операцию.
+        Менять можно родителя и название категории.
+        # FIXME:
+        Возможно вместо handler: Callable
+        должно быть handler: Callable[[Category], None]
+        """
         pass
 
     def set_budget_list(self, cat: list[Budget]) -> None:
+        """
+        Метод воссоздает список бюджетов из базы данных и
+        и добавляет его в графический интерфейс (GUI)
+        # FIXME:
+        Возможно вместо handler: [Budget]
+        должно быть cat: list[Budget]
+        """
         pass
-
-    def set_expense_list(self, cat: list[Expense]) -> None:
-        pass
-
-    def register_cat_modifier(self,
-                              handler: Callable[[Category], None]):
-        pass
-
-
-class AbstractView(ABC):
-    """
-    Абстрактное представления.
-    Абстрактные методы:
-    пока не известно
-    """
-
-    @abstractmethod
-    def add(self) -> int:
-        """
-        Добавить объект в репозиторий, вернуть id объекта,
-        также записать id в атрибут pk.
-        """
-
-    @abstractmethod
-    def get(self) -> None:
-        """ Получить объект по id """
-
-    @abstractmethod
-    def get_all(self) -> None:
-        """
-        Получить все записи по некоторому условию
-        where - условие в виде словаря {'название_поля': значение}
-        если условие не задано (по умолчанию), вернуть все записи
-        """
-
-    @abstractmethod
-    def update(self) -> None:
-        """ Обновить данные об объекте. Объект должен содержать поле pk. """
-
-    @abstractmethod
-    def delete(self) -> None:
-        """ Удалить запись """

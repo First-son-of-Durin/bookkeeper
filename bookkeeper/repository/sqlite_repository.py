@@ -115,6 +115,7 @@ class SQLiteRepository(AbstractRepository[T]):
         con.close()
 
     def delete(self, pk: int) -> None:
+        """ Удалить запись по pk"""
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
             cur.execute('PRAGMA foreign_keys = ON')
