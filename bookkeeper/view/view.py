@@ -1,156 +1,140 @@
+"""
+Модуль содержит описание пользовательского интерфейса
+В модуле описывается диалоговое окно, выводящее информацию
+на пользовательский экран.
+"""
+
 import sys
+from setuptools.config._validate_pyproject import ValidationError
 
-from PySide6 import QtWidgets, QtCore, QtGui
-from bookkeeper.bookkeeper.view.abstract_view import AbstractView
-from PySide6.QtWidgets import QApplication
+from PySide6 import QtWidgets
+from PySide6.QtWidgets import QMessageBox, QPushButton
 
-
-class App(QApplication):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.view = MainWindow()
+from ...bookkeeper.view.abstract_view import AbstractView
 
 
+def handle_error(handler):
+    def inner(*args, **kwargs):
+        try:
+            handler(*args, **kwargs)
+        except ValidationError as ex:
+            QMessageBox.critical('Ошибка', str(ex))
+
+    return inner
 
 
 class View(AbstractView):
+    cat_modifier: any = None
+    cat_adder: any = None
+    cat_deleter: any = None
 
     def __init__(self):
-        pass
+        # Создание и запуск окна
+        self.app = QtWidgets.QApplication(sys.argv)
+        self.window = QtWidgets.QMainWindow()
+        self.window.setWindowTitle('The Bookkeeper App')
+        self.window.resize(600, 600)
 
-    def register_cat_adder(self, handler):
-        self.cat_adder = handler
+        self.central_widget = QtWidgets.QWidget()
+        self.window.setCentralWidget(self.central_widget)
 
+        self.vertical_layout = QtWidgets.QVBoxLayout()
+        self.central_widget.setLayout(self.vertical_layout)
 
-class MyWindow(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        self.expenses_label = "Последние расходы"
+        self.expenses_table_label = QtWidgets.QLabel(self.expenses_label)
+        self.vertical_layout.addWidget(self.expenses_table_label)
 
+        self.expenses_table = QtWidgets.QTableWidget(20, 4)
+        self.expenses_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
-app = QtWidgets.QApplication(sys.argv)
+        self.expenses_table.setHorizontalHeaderLabels("Дата Сумма Категория Комментарий".split())
+        self.expenses_table_header = self.expenses_table.horizontalHeader()
 
-window = QtWidgets.QMainWindow()
-window.setWindowTitle('The Bookkeeper App')
-window.resize(600, 600)
+        self.expenses_table_header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        self.expenses_table_header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        self.expenses_table_header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+        self.expenses_table_header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
+        self.vertical_layout.addWidget(self.expenses_table)
 
-central_widget = QtWidgets.QWidget()
-window.setCentralWidget(central_widget)
+        self.budget_label = "Последние расходы"
+        self.budget_table_label = QtWidgets.QLabel(self.budget_label)
+        self.vertical_layout.addWidget(self.budget_table_label)
 
-vertical_layout = QtWidgets.QVBoxLayout()
-central_widget.setLayout(vertical_layout)
-window.show()
+        self.budget_table = QtWidgets.QTableWidget(3, 2)
 
-expenses_text = "Последние расходы"
-expenses_widget = QtWidgets.QLabel(expenses_text)
-vertical_layout.addWidget(expenses_widget)
+        self.budget_table.setHorizontalHeaderLabels("Сумма Бюджет".split())
+        self.budget_table_header_horizont = self.budget_table.horizontalHeader()
 
-expenses_table = QtWidgets.QTableWidget(4, 20)
-expenses_table.setColumnCount(4)
-expenses_table.setRowCount(20)
-expenses_table.setHorizontalHeaderLabels(
-    "Дата Сумма Категория Комментарий".split())
+        self.budget_table_header_horizont.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        self.budget_table_header_horizont.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
 
-header = expenses_table.horizontalHeader()
-header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
+        self.budget_table.setVerticalHeaderLabels("День Неделя Месяц".split())
+        self.budget_table_header_vert = self.budget_table.verticalHeader()
 
-expenses_table.setEditTriggers(
-    QtWidgets.QAbstractItemView.NoEditTriggers)
-#expenses_table.verticalHeader().hide()
+        self.budget_table_header_vert.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        self.budget_table_header_vert.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        self.budget_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.vertical_layout.addWidget(self.budget_table)
 
-def set_data(data):
-    for i, row in enumerate(data):
-        for j, x in enumerate(row):
-            expenses_table.setItem(
-                i, j,
-                QtWidgets.QTableWidgetItem(x.capitalize())
-            )
+        self.grid_layout = QtWidgets.QGridLayout()
 
-data = [row.split('|') for row in '''
-2023-01-09 15:09:00|7.49|хозтовары|пакет на кассе
-2023-01-09 15:09:00|104.99|кефир
-2023-01-09 15:09:00|129.99|хлеб
-2023-01-09 15:09:00|239.98|сладости|пряники
-2023-01-09 15:09:00|139.99|сыр
-2023-01-09 15:09:00|82.99|сметана
-2023-01-06 20:32:02|5536.00|книги|книги по Python и PyQt
-'''.strip().splitlines()]
-set_data(data)
+        self.sum_widget = QtWidgets.QLabel("Сумма")
+        self.grid_layout.addWidget(self.sum_widget, 1, 0)
 
-vertical_layout.addWidget(expenses_table)
+        self.category_widget = QtWidgets.QLabel("Категория")
+        self.grid_layout.addWidget(self.category_widget, 2, 0)
 
-budget_text = "Бюджет"
-budget_widget = QtWidgets.QLabel(budget_text)
-vertical_layout.addWidget(budget_widget)
+        self.category_widget = QtWidgets.QLabel("Новая категория")
+        self.grid_layout.addWidget(self.category_widget, 3, 0)
 
-budget_table = QtWidgets.QTableWidget(2, 3)
-budget_table.setColumnCount(2)
-budget_table.setRowCount(3)
+        self.expense_money_line = QtWidgets.QLineEdit('0')
+        self.grid_layout.addWidget(self.expense_money_line, 1, 1)
 
-budget_table.setHorizontalHeaderLabels(
-    "Сумма Бюджет".split())
-header = budget_table.horizontalHeader()
-header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
+        # Элементы с взаимодействием
+        # Список категорий (выпадающий список)
+        self.combobox_text = ["Продукты", "Книги", "Одежда"]
+        self.combobox_widget = QtWidgets.QComboBox()
+        for item in self.combobox_text:
+            self.combobox_widget.addItem(item)
+        self.grid_layout.addWidget(self.combobox_widget, 2, 1)
 
-budget_table.setVerticalHeaderLabels(
-    "День Неделя Месяц".split())
-header = budget_table.verticalHeader()
-header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        # Строка для ввода новой категории
+        self.new_category_line = QtWidgets.QLineEdit(
+            'Новая категория (родительской будет считаться категория, выбранная в списке)')
+        self.grid_layout.addWidget(self.new_category_line, 3, 1)
 
-budget_table.setEditTriggers(
-    QtWidgets.QAbstractItemView.NoEditTriggers)
-#expenses_table.verticalHeader().hide()
+        # Кнопки
+        # Кнопка редактирования списка расходов и бюджета
+        self.edit_expense_button = QPushButton("Редактировать")
+        # self.edit_expense_button.clicked.connect(handler)
+        self.grid_layout.addWidget(self.edit_expense_button, 0, 0, 1, 4)
 
-def set_data(data):
-    for i, row in enumerate(data):
-        for j, x in enumerate(row):
-            budget_table.setItem(
-                i, j,
-                QtWidgets.QTableWidgetItem(x.capitalize())
-            )
+        # Кнопка добавления расхода
+        self.add_expense_button = QPushButton("Добавить расход")
+        # self.add_expense_button.clicked.connect(add_expense_handler)
+        self.grid_layout.addWidget(self.add_expense_button, 1, 2)
 
-data = [row.split('|') for row in '''
-705.43|1000
-6719.43|7000
-10592.96|30000
-'''.strip().splitlines()]
-set_data(data)
+        # Кнопка удаления категории
+        self.delete_category_button = QtWidgets.QPushButton("Удалить категорию")
+        # self.delete_category_button.clicked.connect(handler)
+        self.grid_layout.addWidget(self.delete_category_button, 2, 2)
 
-vertical_layout.addWidget(budget_table)
+        # Кнопка добавления категории
+        self.add_category_button = QtWidgets.QPushButton("Новая категория")
+        # self.add_category_button.clicked.connect(handler)
+        self.grid_layout.addWidget(self.add_category_button, 3, 2)
 
-grid_layout = QtWidgets.QGridLayout()
+        self.vertical_layout.addLayout(self.grid_layout, -1)
 
-sum_text = "Сумма"
-sum_widget = QtWidgets.QLabel(sum_text)
-grid_layout.addWidget(sum_widget,0,0)
+    def register_expenses_budget_modifier(self, handler):
+        self.edit_expense_button.clicked.connect(handle_error(handler))
 
-edit_line = QtWidgets.QLineEdit('0')
-grid_layout.addWidget(edit_line,0,1)
+    def register_expenses_adder(self, handler):
+        self.add_expense_button.clicked.connect(handle_error(handler))
 
-category_text = "Категория"
-category_widget = QtWidgets.QLabel(category_text)
-grid_layout.addWidget(category_widget,1,0)
+    def register_category_deleter(self, handler):
+        self.delete_category_button.clicked.connect(handle_error(handler))
 
-combobox_text = ["Продукты", "Книги", "Одежда"]
-combobox_widget = QtWidgets.QComboBox()
-for item in combobox_text:
-    combobox_widget.addItem(item)
-grid_layout.addWidget(combobox_widget,1,1)
-
-edit_text = "Редактировать"
-edit_button = QtWidgets.QPushButton(edit_text)
-grid_layout.addWidget(edit_button,1,2)
-
-add_button = QtWidgets.QPushButton()
-add_text = "Добавить"
-add_button.setText(add_text)
-grid_layout.addWidget(add_button,2,1)
-
-vertical_layout.addLayout(grid_layout,-1)
-
-sys.exit(app.exec())
+    def register_category_adder(self, handler):
+        self.add_category_button.clicked.connect(handle_error(handler))
