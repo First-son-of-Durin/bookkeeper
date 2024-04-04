@@ -25,11 +25,7 @@ class AbstractRepository(ABC, Generic[T]):
     """
     Абстрактный репозиторий.
     Абстрактные методы:
-    add
-    get
-    get_all
-    update
-    delete
+    add, get, get_all, update, delete
     """
 
     @abstractmethod
@@ -38,10 +34,12 @@ class AbstractRepository(ABC, Generic[T]):
         Добавить объект в репозиторий, вернуть id объекта,
         также записать id в атрибут pk.
         """
+        pass
 
     @abstractmethod
     def get(self, pk: int) -> T | None:
         """ Получить объект по id """
+        pass
 
     @abstractmethod
     def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
@@ -50,11 +48,14 @@ class AbstractRepository(ABC, Generic[T]):
         where - условие в виде словаря {'название_поля': значение}
         если условие не задано (по умолчанию), вернуть все записи
         """
+        pass
 
     @abstractmethod
     def update(self, obj: T) -> None:
         """ Обновить данные об объекте. Объект должен содержать поле pk. """
+        pass
 
     @abstractmethod
     def delete(self, pk: int) -> None:
-        """ Удалить запись """
+        """ Удалить запись по pk"""
+        pass

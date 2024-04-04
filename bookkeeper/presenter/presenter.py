@@ -7,6 +7,7 @@ from bookkeeper.bookkeeper.models.expense import Expense
 from bookkeeper.bookkeeper.models.category import Category
 from bookkeeper.bookkeeper.models.budget import Budget
 
+
 class Presenter:
     def __init__(self,
                  view: AbstractView, repo: AbstractRepository[T]  # DIP

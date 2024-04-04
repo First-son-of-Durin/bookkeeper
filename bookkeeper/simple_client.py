@@ -44,6 +44,6 @@ while True:
         except IndexError:
             print(f'категория {name} не найдена')
             continue
-        exp = Expense(float(amount), cat.pk)
+        exp = Expense(int(amount), cat.pk)
         exp_repo.add(exp)
         print(exp)

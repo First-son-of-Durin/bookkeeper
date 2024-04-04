@@ -28,7 +28,7 @@ class AbstractView(Protocol):
         pass
 
     def register_cat_modifier(self,
-            handler: Callable[[Category],None]):
+                              handler: Callable[[Category], None]):
         pass
 
 

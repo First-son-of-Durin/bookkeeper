@@ -6,10 +6,16 @@ from typing import Iterable, Iterator
 
 
 def _get_indent(line: str) -> int:
+    """
+
+    """
     return len(line) - len(line.lstrip())
 
 
 def _lines_with_indent(lines: Iterable[str]) -> Iterator[tuple[int, str]]:
+    """
+
+    """
     for line in lines:
         if not line or line.isspace():
             continue

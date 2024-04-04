@@ -15,7 +15,7 @@ class Category:
     родителя (категория, подкатегорией которой является данная) в атрибуте parent.
     У категорий верхнего уровня parent = None
     """
-    name: str
+    name: str = ''
     parent: int | None = None
     pk: int = 0
 
@@ -123,7 +123,15 @@ class Category:
         return list(created.values())
 
     def __repr__(self):
+        """
+        Объект класса Category отображается как
+        Category(name=str, parent=int|None, pk=int)
+        """
         return f'Category(name={self.name}, parent={self.parent}, pk={self.pk})'
 
     def __str__(self):
+        """
+        Объект класса Category отображается как
+        Category(name=str, parent=int|None, pk=int)
+        """
         return f'Category(name={self.name}, parent={self.parent}, pk={self.pk})'

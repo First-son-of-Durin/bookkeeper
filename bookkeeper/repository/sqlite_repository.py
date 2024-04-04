@@ -1,10 +1,10 @@
 """
 Модуль описывает репозиторий, работающий в sqlite
 """
-# from itertools import count
-# from typing import Any
+
 from inspect import get_annotations
 from typing import Any
+
 import sqlite3
 
 from bookkeeper.bookkeeper.repository.abstract_repository import AbstractRepository, T
@@ -19,10 +19,15 @@ class SQLiteRepository(AbstractRepository[T]):
         self.db_file = db_file
         self.table_name = cls.__name__.lower()
         self.fields = get_annotations(cls, eval_str=True)
-        self.fields.pop('pk')
+        if self.fields.__contains__('pk'):
+            self.fields.pop('pk')
         self.cls_type: T = cls
 
     def add(self, obj: T) -> int:
+        """
+            Добавить объект в репозиторий в базе данных .db,
+            вернуть id объекта, также записать id в атрибут pk.
+        """
         if getattr(obj, 'pk', None) != 0:
             raise ValueError(f'trying to add object {obj} with filled `pk` attribute')
         names = ', '.join(self.fields.keys())
@@ -41,6 +46,7 @@ class SQLiteRepository(AbstractRepository[T]):
         return obj.pk
 
     def get(self, pk: int) -> T | None:
+        """ Получить объект по pk"""
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
             cur.execute('PRAGMA foreign_keys = ON')
@@ -61,6 +67,11 @@ class SQLiteRepository(AbstractRepository[T]):
             return None
 
     def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
+        """
+            Получить все записи по некоторому условию
+            where - условие в виде словаря {'название_поля': значение}
+            если условие не задано (по умолчанию), вернуть все записи
+        """
         result: list[T] = []
         if where is None:
             with sqlite3.connect(self.db_file) as con:
@@ -88,6 +99,7 @@ class SQLiteRepository(AbstractRepository[T]):
         return result
 
     def update(self, obj: T) -> None:
+        """ Обновить данные об объекте. Объект должен содержать поле pk. """
         if obj.pk == 0:
             raise ValueError('attempt to update object with unknown primary key')
         keys = list(self.fields.keys())
@@ -96,9 +108,7 @@ class SQLiteRepository(AbstractRepository[T]):
             cur = con.cursor()
             cur.execute('PRAGMA foreign_keys = ON')
             set_clause = ', '.join(f'{key} = ?' for key in keys)
-            #print(set_clause)
             set_values = tuple(values + [obj.pk])  # Добавляем pk в конец кортежа
-            #print(set_values)
             cur.execute(f'UPDATE {self.table_name} SET {set_clause} WHERE rowid = ?', set_values)
 
         con.commit()

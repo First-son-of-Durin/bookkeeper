@@ -18,6 +18,10 @@ class MemoryRepository(AbstractRepository[T]):
         self._counter = count(1)
 
     def add(self, obj: T) -> int:
+        """
+        Добавить объект в репозиторий в оперативной памяти,
+        вернуть id объекта, также записать id в атрибут pk.
+        """
         if getattr(obj, 'pk', None) != 0:
             raise ValueError(f'trying to add object {obj} with filled `pk` attribute')
         pk = next(self._counter)
@@ -26,18 +30,26 @@ class MemoryRepository(AbstractRepository[T]):
         return pk
 
     def get(self, pk: int) -> T | None:
+        """ Получить объект по pk"""
         return self._container.get(pk)
 
     def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
+        """
+            Получить все записи по некоторому условию
+            where - условие в виде словаря {'название_поля': значение}
+            если условие не задано (по умолчанию), вернуть все записи
+        """
         if where is None:
             return list(self._container.values())
         return [obj for obj in self._container.values()
                 if all(getattr(obj, attr) == value for attr, value in where.items())]
 
     def update(self, obj: T) -> None:
+        """ Обновить данные об объекте. Объект должен содержать поле pk. """
         if obj.pk == 0:
             raise ValueError('attempt to update object with unknown primary key')
         self._container[obj.pk] = obj
 
     def delete(self, pk: int) -> None:
+        """ Удалить запись по pk"""
         self._container.pop(pk)
