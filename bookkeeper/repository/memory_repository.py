@@ -53,3 +53,9 @@ class MemoryRepository(AbstractRepository[T]):
     def delete(self, pk: int) -> None:
         """ Удалить запись по pk"""
         self._container.pop(pk)
+
+    def create_db_from_list(self, obj_list: [T]):
+        # Метод метод создает БД из набора элементов
+        for obj in obj_list:
+            setattr(obj, "pk", None)
+            self.add(obj)

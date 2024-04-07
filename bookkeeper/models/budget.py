@@ -15,3 +15,4 @@ class Budget:
     """
     duration: timedelta
     budget: float = 0
+    pk: int = None

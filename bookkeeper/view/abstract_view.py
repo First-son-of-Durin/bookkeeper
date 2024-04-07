@@ -3,6 +3,7 @@
 """
 
 from typing import Protocol, Callable
+
 from bookkeeper.bookkeeper.models.expense import Expense
 from bookkeeper.bookkeeper.models.category import Category
 from bookkeeper.bookkeeper.models.budget import Budget

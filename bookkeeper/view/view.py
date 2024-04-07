@@ -10,7 +10,7 @@ from setuptools.config._validate_pyproject import ValidationError
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMessageBox, QPushButton
 
-from ...bookkeeper.view.abstract_view import AbstractView
+from bookkeeper.bookkeeper.view.abstract_view import AbstractView
 
 
 def handle_error(handler):
@@ -35,12 +35,15 @@ class View(AbstractView):
         self.window.setWindowTitle('The Bookkeeper App')
         self.window.resize(600, 600)
 
+        # Центральное окно
         self.central_widget = QtWidgets.QWidget()
         self.window.setCentralWidget(self.central_widget)
 
+        # Layout центрального окна
         self.vertical_layout = QtWidgets.QVBoxLayout()
         self.central_widget.setLayout(self.vertical_layout)
 
+        # Список расходов
         self.expenses_label = "Последние расходы"
         self.expenses_table_label = QtWidgets.QLabel(self.expenses_label)
         self.vertical_layout.addWidget(self.expenses_table_label)
@@ -57,7 +60,8 @@ class View(AbstractView):
         self.expenses_table_header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
         self.vertical_layout.addWidget(self.expenses_table)
 
-        self.budget_label = "Последние расходы"
+        # Бюджет
+        self.budget_label = "Бюджет"
         self.budget_table_label = QtWidgets.QLabel(self.budget_label)
         self.vertical_layout.addWidget(self.budget_table_label)
 
@@ -77,6 +81,7 @@ class View(AbstractView):
         self.budget_table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.vertical_layout.addWidget(self.budget_table)
 
+        # Сетка для элементов
         self.grid_layout = QtWidgets.QGridLayout()
 
         self.sum_widget = QtWidgets.QLabel("Сумма")
@@ -93,11 +98,8 @@ class View(AbstractView):
 
         # Элементы с взаимодействием
         # Список категорий (выпадающий список)
-        self.combobox_text = ["Продукты", "Книги", "Одежда"]
-        self.combobox_widget = QtWidgets.QComboBox()
-        for item in self.combobox_text:
-            self.combobox_widget.addItem(item)
-        self.grid_layout.addWidget(self.combobox_widget, 2, 1)
+        self.category_combobox = QtWidgets.QComboBox()
+        self.grid_layout.addWidget(self.category_combobox, 2, 1)
 
         # Строка для ввода новой категории
         self.new_category_line = QtWidgets.QLineEdit(
@@ -138,3 +140,15 @@ class View(AbstractView):
 
     def register_category_adder(self, handler):
         self.add_category_button.clicked.connect(handle_error(handler))
+
+    def update_category_combobox(self, category_names_list: [str]) -> None:
+        self.category_combobox.clear()
+        self.category_combobox.addItem("")
+        for item in category_names_list:
+            self.category_combobox.addItem(item)
+
+    def get_selected_category(self) -> int:
+        return self.category_combobox.currentIndex()
+
+    def get_new_category_name(self):
+        return self.new_category_line.text()
